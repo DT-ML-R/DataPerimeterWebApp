@@ -1,8 +1,9 @@
-import './App.css';
+import './themes/appTheme.css';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ResourcePage from './Pages/ResourcePage';
-import React, { useState } from 'react';
+import React, {useContext, useState} from 'react';
 import HomePage from './Pages/HomePage';
+import './themes/appTheme.css'
 import {
     AppBar,
     Menu,
@@ -13,10 +14,11 @@ import {
     Tabs,
     Tab,
     CssBaseline,
-    Container,
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CloseIcon from '@mui/icons-material/Close';
 import LoginPage from './Pages/LoginPage';
+import ProfileContext, {profiles} from "./logic/profileLogic";
 
 function App() {
     const location = useLocation();
@@ -67,6 +69,11 @@ function App() {
         }
     };
 
+    const handleLoginNavigate = () => {
+        navigate('/login')
+        handleCloseProfileMenu()
+    }
+
     // App bar for the website.
     const MyAppBar = () => {
         return (
@@ -75,12 +82,6 @@ function App() {
                     <Typography variant='h4' sx={{ flexGrow: 1 }}>
                         {getPageTitle()}
                     </Typography>
-
-                    <Tabs value={getCurrentTab()} onChange={handleTabChange} textColor='inherit'>
-                        <Tab label='Home' value='/' />
-                        <Tab label='Login' value={'/login'} />
-                        <Tab label='Resource Page (temp)' value='/resourcePage' />
-                    </Tabs>
 
                     <IconButton
                         size='large'
@@ -104,32 +105,63 @@ function App() {
                             horizontal: 'right',
                         }}
                     >
-                        <MenuItem onClick={handleCloseProfileMenu}>Profile</MenuItem>
-                        <MenuItem onClick={handleCloseProfileMenu}>My account</MenuItem>
-                        <MenuItem onClick={handleCloseProfileMenu}>Logout</MenuItem>
+                        <MenuItem onClick={handleLoginNavigate}>Login</MenuItem>
+                        <DisplayProfiles />
+                        <MenuItem onClick={handleCloseProfileMenu}>Logout All</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
         );
     };
 
-    /*
-        * Cssbaseline: Sets the global theme I think
-        * MyAppBar: Appbar. I separated it to make it readable. It is above me
-     */
-    return (
-        <div>
-            <CssBaseline />
+    const ProfileCard = ({ name, onClick }) => {
+        return (
+            <MenuItem onClick={onClick}>
+                <Typography sx={{ flex: 1 }}>{name}</Typography>
+                <IconButton>
+                    <CloseIcon />
+                </IconButton>
+            </MenuItem>
+        );
+    };
 
+    const DisplayProfiles = () => {
+        const { profiles } = useContext(ProfileContext);
+
+        return (
+            <div>
+                {Object.entries(profiles).map(([userId, profile]) => (
+                    <ProfileCard key={userId} onClick={handleCloseProfileMenu} name={profile.name} />
+                ))}
+            </div>
+        );
+    };
+
+    return (
+        <div className='app-container'>
+            <CssBaseline />
             {MyAppBar()}
 
-            <Container maxWidth={'xl'} sx={{ mt: 10, mb: 3 }}>
+            <div className='sidebar'>
+                <Tabs
+                    value={getCurrentTab()}
+                    onChange={handleTabChange}
+                    textColor='inherit'
+                    orientation='vertical'
+                >
+                    <Tab label='Home' value='/' />
+                    <Tab label='Login' value='/login' />
+                    <Tab label='Resource Page (temp)' value='/resourcePage' />
+                </Tabs>
+            </div>
+
+            <div className='content-area'>
                 <Routes>
                     <Route path='/' element={<HomePage />} />
                     <Route path='/resourcePage' element={<ResourcePage />} />
                     <Route path='/login' element={<LoginPage />} />
                 </Routes>
-            </Container>
+            </div>
         </div>
     );
 }
